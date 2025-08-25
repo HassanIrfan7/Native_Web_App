@@ -1,80 +1,73 @@
-import React, { useState, useEffect } from 'react';
-import { User, Video, Comment, Rating } from './types';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { DataProvider } from './contexts/DataContext';
-import LoginPage from './components/LoginPage';
-import AdminDashboard from './components/AdminDashboard';
-import CreatorDashboard from './components/CreatorDashboard';
-import ConsumerDashboard from './components/ConsumerDashboard';
-import VideoPlayer from './components/VideoPlayer';
-import Navigation from './components/Navigation';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
+import Header from './components/common/Header';
+import Footer from './components/common/Footer';
+import ProtectedRoute from './components/common/ProtectedRoute';
+import FeaturedHomePage from './pages/FeaturedHomePage';
+import HomePage from './pages/HomePage';
+import AboutPage from './pages/AboutPage';
+import ContactPage from './pages/ContactPage';
+import PrivacyPage from './pages/PrivacyPage';
+import TermsPage from './pages/TermsPage';
+import LoginForm from './components/auth/LoginForm';
+import RegisterForm from './components/auth/RegisterForm';
+import VideoPlayer from './components/video/VideoPlayer';
+import AdminLayout from './components/admin/AdminLayout';
+import AdminDashboard from './components/admin/AdminDashboard';
+import VideoManagement from './components/admin/VideoManagement';
+import VideoUpload from './components/admin/VideoUpload';
 
-function AppContent() {
-  const { user, logout } = useAuth();
-  const [currentView, setCurrentView] = useState<string>('dashboard');
-  const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
-
-  const renderView = () => {
-    if (!user) {
-      return <LoginPage />;
-    }
-
-    switch (currentView) {
-      case 'video':
-        return selectedVideo ? (
-          <VideoPlayer 
-            video={selectedVideo} 
-            onBack={() => setCurrentView('dashboard')} 
-          />
-        ) : (
-          <div>Video not found</div>
-        );
-      default:
-        switch (user.role) {
-          case 'admin':
-            return <AdminDashboard />;
-          case 'creator':
-            return <CreatorDashboard />;
-          case 'consumer':
-            return (
-              <ConsumerDashboard 
-                onVideoSelect={(video) => {
-                  setSelectedVideo(video);
-                  setCurrentView('video');
-                }}
-              />
-            );
-          default:
-            return <div>Unknown role</div>;
-        }
-    }
-  };
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900">
-      {user && (
-        <Navigation 
-          user={user} 
-          onLogout={logout}
-          currentView={currentView}
-          onViewChange={setCurrentView}
-        />
-      )}
-      <main className={user ? 'pt-16' : ''}>
-        {renderView()}
-      </main>
-    </div>
-  );
-}
-
-function App() {
+const App: React.FC = () => {
   return (
     <AuthProvider>
-      <DataProvider>
-        <AppContent />
-      </DataProvider>
+      <Router>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/login" element={<LoginForm />} />
+          <Route path="/register" element={<RegisterForm />} />
+          
+          {/* Routes with Header */}
+          <Route
+            path="/*"
+            element={
+              <>
+                <Header />
+                <Routes>
+                  <Route path="/" element={<FeaturedHomePage />} />
+                  <Route path="/browse" element={<HomePage />} />
+                  <Route path="/about" element={<AboutPage />} />
+                  <Route path="/contact" element={<ContactPage />} />
+                  <Route path="/privacy" element={<PrivacyPage />} />
+                  <Route path="/terms" element={<TermsPage />} />
+                  <Route path="/video/:id" element={<VideoPlayer />} />
+                  
+                  {/* Admin Routes */}
+                  <Route
+                    path="/admin/*"
+                    element={
+                      <ProtectedRoute requireRole="creator">
+                        <AdminLayout>
+                          <Routes>
+                            <Route path="/" element={<AdminDashboard />} />
+                            <Route path="/videos" element={<VideoManagement />} />
+                            <Route path="/upload" element={<VideoUpload />} />
+                            <Route path="/analytics" element={<div className="text-white">Analytics Coming Soon</div>} />
+                            <Route path="/settings" element={<div className="text-white">Settings Coming Soon</div>} />
+                          </Routes>
+                        </AdminLayout>
+                      </ProtectedRoute>
+                    }
+                  />
+                </Routes>
+                <Footer />
+              </>
+            }
+          />
+        </Routes>
+      </Router>
     </AuthProvider>
   );
-}
+};
 
 export default App;
