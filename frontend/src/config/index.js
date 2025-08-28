@@ -1,2 +1,2 @@
 export const BACKEND_URL =
-  import.meta.env.VITE_APP_BACKEND_URL || "http://localhost:8080";
+  import.meta.env.VITE_APP_BACKEND_URL || "http://azurestreambackend-eah4hdexeuhrexhq.canadacentral-01.azurewebsites.net";
